@@ -46,7 +46,7 @@ negative:
    RSB  R5, R5, #0
    MOV R6, R3, LSR R5
 overflow:
-   @ same as for int to float 
+@ same as for int to float 
 exit:
 @ append sign bit
    ADD R6, R6, R1
