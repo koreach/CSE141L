@@ -1,48 +1,42 @@
 				;Input
-				;R0 being the lower 8 bits
-				MOV		R0, #0x00
-				;R1 being the upper 8 bits
-				MOV		R1, #0x00
+				MOV		R0, #0x0000
 				
-				;Isolate	sign bit into R2
-				AND		R2, R1, #0x80
+				;Isolate	sign bit into R1
+				AND		R1, R0, #0x8000
 				
-				;Isolate	and load the exponent into R3
-				AND		R3, R1, #0x7C
-				LSR		R3, R3, #2
+				;Isolate	and load the exponent into R2
+				AND		R2, R2, #0x7C00
+				LSR		R2, R2, #10
 				
-				;Isolate	and load mantissa into R0 and R1
-				AND 		R0, R0, #0x3
+				;Isolate	and load mantissa into R3
+				AND		R3, R3, #0x3FF
 				
-				;If		(E != 0), prepend hidden bit onto mantissa
-				ADD		R4, R0, R1
-				CMP		R4, #0
+				;If		(E != 0), prepend hidden bit onto M
+				CMP		R2, #0
 				BNE		prepend
 				
 prepend_out
 				
-				;Exponent	regimes
-				CMP		R3, #29
+				;Exponent	regines
+				CMP		R2, #29
 				;29-31
 				BGE		overflow
 				BLT		lower
 ;====================JUMP=====================
 prepend
-				ORR		R0, R0, #0x4
+				ORR		R3, R3, #0x400
 				B			prepend_out
 				
 				;29-31	overflow; force output 7FFF or FFFF
 overflow
-				CMP		R1, #0x80
+				CMP		R1, #0x8000
 				BEQ		overflow_negative
-				MOV		R4, #0xFF
-				MOV 		R5, #0x7F
+				MOV		R4, #0x7FFF
 				B			label
 				
 overflow_negative
-				MOV		R4, #0xFF
-				MOV		R5, #0xFF
-				B			label
+				MOV		R4, #0xFFFF
+				B		label
 				
 lower
 				CMP		R2, #26
@@ -61,11 +55,8 @@ lower_2
 				
 				;26-28	left shift mantissa, zero fill left and right as needed
 case_1
-				SUB		R3, R3, #15
-				LSL		R1, R1, R3
-				
-				LSL		R0, R0, R3
-				
+				SUB		R2, R2, #15
+				LSL		R4, R3, R2
 				B		label
 				
 				;25		copy mantissa, zero fill from left

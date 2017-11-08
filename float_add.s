@@ -34,14 +34,14 @@ out
 		and 		r5, r2, #0x80
 		;Compare the sign bits
 		cmp 		r4, r5
-	;If it is equal, add it and check for overflow
+		;If it is equal, add it and check for overflow
 		beq 	 	overflow_check
 		;If r4 is negative
 		bge 		negative
 		;If r5 is positive
 		ble 		positive
 		cmp 		r1, r3
-		beq		r1
+		beq			r1
 ;================================================
 ;		All the branches that happen 
 ;================================================
@@ -127,7 +127,8 @@ outOfForLoop
 		b			out
 ;==================================
 overflow_check
-		add 		r1, r3, r3
+		;Check exponent to see if one is 11110 if so
+		;Add the mantissas together and see if it overflows...
 		b			round_up
 ;first value is positive
 negative
@@ -139,7 +140,7 @@ negative
 positive
 		;compare mantissa
 		cmp 		r1, r3
-		bge		subtract_2
+		bge			subtract_2
 		ble 		addition_2
 addition_1
 		add		r1, r1, r3
