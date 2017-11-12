@@ -1,55 +1,29 @@
-	;MSW		of the first value
 	mov		r0, #128
-	ldr		r0, [r0]
-	;LSW		of the first value
+	ldr		r0, r0
 	mov		r0, #129
-	ldr		r1, [r0]
-	;MSW		of the second value
+	ldr		r1, r0
 	mov		r0, #132
-	ldr		r2, [r0]
-	;LSW		of the second value
+	ldr		r2, r0
 	add		r0, #133
-	ldr		r3, [r0]
-	;First	value
-	;And mask with 01111100 to extract exponent (E) value
+	ldr		r3, r0
 	and		r4, r0, #0x7C
-	;Shift	right logical by two bits to get exponent portion
-	lsr			r4, r4, #2
-	;Second	value
-	;And		mask with 01111100 to extract exponent
+	lsr		r4, r4, #2
 	and		r5, r2, #0x7C
-	;Shift	right logical by two bits to get exponent portion
 	lsr			r5, r5, #2
-	;r4 contains the value which indicates how many times to move the mantissa over
-	;Compare to see which exponent value is bigger
 	cmp 		r4, r5
-	;If r4 > r5 then r3 is the mantissa to move
 	bge 		greater
-	;If r5 > r4 then r1 is the mantissa to moe
 	blt 		less
 out	
-	;r4~r11 bits are again usable again (except r8 which contains the decimal value pushed out from the mantissa)
-	;Extract the sign bits of both values
 	and 		r4, r0, #0x80
 	and 		r5, r2, #0x80
-	;Compare the sign bits
 	cmp 		r4, r5
-	;If it is equal, add it and check for overflow
 	beq 	 	overflow_check
-	;If r4 is negative
 	bge 		negative
-	;If r5 is positive
 	ble 		positive
 	cmp 		r1, r3
 	beq			r1
-;================================================
-;		All the branches that happen 
-;================================================
-;If r4 > r5 (from line 30) then move right the mantissa of r3 since its the smaller value
 greater 
-	; r4 - r5 = r4
 	sub		r4, r4, r5
-	; so... r5 is free now. 
 	;Counter to keep track of how many times the mantissa was moved to the right
 	mov 		r5, #0
 	;Counter to see if it has gone through the loop twice
