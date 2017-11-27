@@ -27,15 +27,12 @@ public class Assembler{
   }
   public static void assemble(File inputfile){
     try{
-      //FileInputStream fileinputstream = new FileInputStream(inputfile);
-      //InputStreamReader inputstreamreader = new InputStreamReader(fileinputstream);
       FileReader fr = new FileReader(inputfile);
       BufferedReader br = new BufferedReader(fr);
       String line = br.readLine();
       int count = 1;
       while (line != null){
-          //System.out.println(line); 
-          //System.out.print("line number: " + count);
+        //read in instructions from int2float.txt
           if(line.equals("mov r0, #0x06")){
             System.out.print("000000000");
             System.out.print("\t @line number: " + count);
@@ -358,6 +355,394 @@ public class Assembler{
           }
           else if(line.equals("label end")){
             System.out.print("001001011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          /*
+          else if(line.equals("")){
+            System.out.print(""); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          */
+          //read in instructions from float2int.txt
+          else if(line.equals("mov r0, #0x00")){
+            System.out.print("001001100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r1, #0x00")){
+            System.out.print("001001101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r3, r1, #0x7c")){
+            System.out.print("001001111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lsr r3, r3, #2")){
+            System.out.print("001010000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r0, r0, #0x3")){
+            System.out.print("001010001"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("add r4, r0, r1")){
+            System.out.print("001010010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("bne prepend")){
+            System.out.print("001010100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("prepend_out:")){
+            System.out.print("001010101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r3, #29")){
+            System.out.print("001010110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("bge overflow")){
+            System.out.print("001010111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("blt lower")){
+            System.out.print("001011000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("prepend:")){
+            System.out.print("001011001"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("orr r0, r0, #0x4")){
+            System.out.print("001011010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("b prepend_out")){
+            System.out.print("001011011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r1, #0x80")){
+            System.out.print("001011101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq overflow_negative")){
+            System.out.print("001011110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r4, #0xff")){
+            System.out.print("001011111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r5, #0x7f")){
+            System.out.print("001100000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("overflow_negative:")){
+            System.out.print("001100010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r5, #0xff")){
+            System.out.print("001100100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lower:")){
+            System.out.print("001100110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r2, #26")){
+            System.out.print("001100111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("bge case_1")){
+            System.out.print("001101000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("blt lower_1")){
+            System.out.print("001101001"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lower_1:")){
+            System.out.print("001101010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r2, #25")){
+            System.out.print("001101011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq case_2")){
+            System.out.print("001101100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("blt lower_2")){
+            System.out.print("001101101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lower_2:")){
+            System.out.print("001101110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r2, #14")){
+            System.out.print("001101111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("bge case_3")){
+            System.out.print("001110000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("blt case_4")){
+            System.out.print("001110001"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("case_1:")){
+            System.out.print("001110010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("sub r3, r3, #15")){
+            System.out.print("001110011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lsl r1, r1, r3")){
+            System.out.print("001110100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lsl r0, r0, r3")){
+            System.out.print("001110101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("case_2:")){
+            System.out.print("001110111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r4, r3")){
+            System.out.print("001111000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("case_3:")){
+            System.out.print("001111010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("sub r2, r2, #15")){
+            System.out.print("001111011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r2, #0")){
+            System.out.print("001111100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("ble out")){
+            System.out.print("001111101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r4, r3, #0x1")){
+            System.out.print("001111110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("lsr r3, r3, #0x1")){
+            System.out.print("001111111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("sub r2, r2, #1")){
+            System.out.print("010000000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq out2")){
+            System.out.print("010000010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r5, r3, #0x1")){
+            System.out.print("010000100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("add r4, r4, r5")){
+            System.out.print("010001000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq forloopout")){
+            System.out.print("010001010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("forloopout:")){
+            System.out.print("010001100"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r5, r4, #0x1")){
+            System.out.print("010001101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r6, r3, #0x1")){
+            System.out.print("010001110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r5, r6")){
+            System.out.print("010001111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq out3")){
+            System.out.print("010010000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r5, #0x0")){
+            System.out.print("010010010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq out4")){
+            System.out.print("010010011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("case_4:")){
+            System.out.print("010010101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq overflow_negative_2")){
+            System.out.print("010010111"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r4, #0x0000")){
+            System.out.print("010011000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("overflow_negative_2:")){
+            System.out.print("010011010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("mov r4, #0x8000")){
+            System.out.print("010011011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("copy_mantissa:")){
+            System.out.print("010011101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("out2:")){
+            System.out.print("010100011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("add r5, r5, r4")){
+            System.out.print("010100101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r5, #0x2")){
+            System.out.print("010100110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("out3:")){
+            System.out.print("010101000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("add r4, r3, #1")){
+            System.out.print("010101001"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("out4:")){
+            System.out.print("010101011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r5, #1")){
+            System.out.print("010101101"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("beq out5")){
+            System.out.print("010101110"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("out5:")){
+            System.out.print("010110000"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("and r5, r4, #0xfffe")){
+            System.out.print("010110001"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r5, #0")){
+            System.out.print("010110010"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("bne out3")){
+            System.out.print("010110011"); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("")){
+            System.out.print(""); 
+            System.out.print("\t @line number: " + count);
+            System.out.println("\t @assembly code: " + line);
+          }
+          else if(line.equals("cmp r1, #0x8000")){
+            System.out.print("010010110"); 
             System.out.print("\t @line number: " + count);
             System.out.println("\t @assembly code: " + line);
           }
