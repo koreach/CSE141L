@@ -21,11 +21,10 @@ module top(
 
 	wire[8:0] instruction9bit; // wire for 9 bit code that corresponds to look up. this is initial starting point I think
 	wire[7:0] result_output; //wire that holds the output of current value
-	wire[7:0] lookup_output;
 	wire[7:0] decoder_output;
 	wire[7:0] datamem_output;
 	wire[7:0] alu_output;
-	wire[7:0] lookup_val_output;
+	wire[7:0] lookup_val;
 	wire[7:0] reg_output;
 
 	wire ov_o;
@@ -53,7 +52,7 @@ module top(
 
 	lookup look(
   		.code(instruction9bit[8:0]) //or .code(alu_output)  
-  		.out(lookup_val_output)
+  		.out(lookup_val)
 	);
 
 	data_mem dm(
@@ -75,6 +74,7 @@ module top(
 		.CLK,
 		.WriteRegister,
 		.ReadRegister,
+		.result_output,
 		.reg_output
 	);
 
