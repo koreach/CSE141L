@@ -1,0 +1,43 @@
+module IF_TB();
+parameter PCW=16;
+logic              Abs_Jump, 
+                   Rel_Jump;	
+logic signed[PCW-1:0] Offset;
+logic Reset;
+logic Halt;
+logic CLK;
+wire[PCW-1:0] PC;     
+
+
+IF IF1(
+  .Abs_Jump (Abs_Jump),      // branch to "offset"
+  .Rel_Jump (Rel_Jump),		// branch by "offset"
+  .Offset   (Offset  ),
+  .Reset    (Reset   ),
+  .Halt     (Halt    ),
+  .CLK      (CLK     ),
+  .PC       (PC      )      // pointer to insr. mem
+  );
+
+initial begin
+  Halt = 0;
+  Abs_Jump = 0;
+  Rel_Jump = 0;
+  Offset = 16'h0040;
+  #10ns Reset = 1;
+  #10ns Reset = 0;
+  #1000ns Abs_Jump = 1;
+  #10ns Abs_Jump = 0;
+  #1000ns Rel_Jump = 1;
+  #10ns Rel_Jump = 0;
+  #20ns $stop;
+end
+
+always begin
+  CLK = 0;
+  #5ns CLK = 1;
+  #5ns;
+end
+
+
+endmodule

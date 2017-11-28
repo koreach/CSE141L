@@ -1,0 +1,34 @@
+// Create Date:    18:04:22 10/27/2011 
+// Design Name: 
+// Module Name:    ALU 
+// Project Name: 
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+import definitions::*;
+module ALU(
+  input [1:0] OP,
+  input       AND,
+  input [7:0] INA,
+  input [7:0] INB,
+  output logic [7:0] OUT,
+  output logic       CARRY_OUT
+    );
+	 
+  op_mne op_mnemonic;
+	
+  always_comb begin
+	case(OP)
+	  kADD : {CARRY_OUT,OUT} = AND? INPUTA+INPUTB : INPUTB;
+	  kSLL : {CARRY_OUT,OUT} = INPUTA<<INPUTB;
+	  kSLU : {CARRY_OUT,OUT} = INPUTA>>(8-INPUTB);
+	  kSR  : CARRY_OUT       = INPUTA>>1;
+	endcase
+	 
+    op_mnemonic = op_mne'(OP);
+  end
+endmodule
+
