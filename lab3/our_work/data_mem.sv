@@ -30,10 +30,8 @@ module data_mem(
 		end
 		else
 			DataOut = 16'bZ;
-			
 	always_ff @ (posedge CLK)	             // writes are clocked / sequential
-    if(WriteMem) begin
-      my_memory[DataAddress] = DataIn;
-	  $display("Memory write M[%d] = %d",DataAddress,DataIn);
-    end
+    	if(WriteMem) begin
+      		my_memory[DataAddress] = DataIn;
+    	end
 endmodule
