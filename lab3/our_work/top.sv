@@ -2,7 +2,7 @@
  *  Brianna Yamanaka                         *   
  *  Jeffrey Trang                            *   
  *  Goo Gu                                   *   
- *  Byung Lim                                *   
+ *  Byunggwan Lim                            *   
  *                                           *   
  *  CSE141L Lab3                             *   
  *                                           *   
