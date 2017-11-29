@@ -11,19 +11,21 @@
  *                                           *
  *********************************************/
 
-module reg_file #(parameter raw = /* TODO */)
+//raw is RF address width and will give us more registers
+
+module reg_file #(parameter raw = 4/* TODO */)
           ( input clk,                           //clock for writes only
-            input /*TODO*/ rs_in,                //read pointer rs
+            input [raw-1:0] /*TODO*/ rs_in,                //read pointer rs
             input          rt_in,                //read pointer rt
             input          rd_in,                //write pointer rd
             input          wen_in,               //write enable
-            input /*TODO*/ wrdata_in,            //data to be written/loaded
-            output logic /*TODO*/ rs_out,        //data read out of reg file
-            output logic /*TODO*/ rt_out
+            input [7:0] /*TODO*/ wrdata_in,            //data to be written/loaded
+            output logic [7:0] /*TODO*/ rs_out,        //data read out of reg file
+            output logic [7:0] /*TODO*/ rt_out
           );
 
           /*core*/
-          logic /*TODO*/ RF /*TODO*/;
+          logic [7:0] RF [2**raw]; /* TODO, what are these values and do they work with our implementation */
           
           /*two simultaneous, continuous, combinational reads supported*/
           assign rt_out = RF[rt_in];
