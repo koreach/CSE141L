@@ -51,7 +51,7 @@ module top(
 	);
 
 	lookup look(
-  		.code(instruction9bit[8:0]) //or .code(alu_output)  
+  		.code(instruction9bit[8:0]), //or .code(alu_output)  
   		.out(lookup_val)
 	);
 
@@ -61,17 +61,17 @@ module top(
 		.ReadMem(),
 		.WriteMem(),
 		.DataIn(result_output),
-		.DataOut(datamem_output),
+		.DataOut(datamem_output)
 	);
 
-	fetch_unit if(
+	fetch_unit fetch1(
 		.reset,
-		.CLK,
+		.CLK(clk),
 		.done
 	);
 
 	reg_file rf(
-		.CLK,
+		.CLK(clk),
 		.WriteRegister,
 		.ReadRegister,
 		.result_output,
