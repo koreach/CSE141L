@@ -1,0 +1,15 @@
+module lookuptable(
+	input [8:0] instruction9bit, //this is key
+	output logic [3:0] alu_op,	//If you wanted 32 bits, just increase this to 5 bits and imm to 32	
+	//ask byung about lookup table stuff
+	output logic mem_w
+	);
+
+always_comb
+	case(instruction9bit)
+		9'h0: mem_w = 0
+		9'h1: mem_w = 1
+		9'h2: mem_w = 2
+		default: mem_w = 0
+	endcase
+endmodule
