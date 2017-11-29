@@ -17,7 +17,7 @@ module alu (input  [7:0]       rs_i ,	     // operand s
     		input              ov_i ,	     // shift-in 
     		input			   imm  ,		 // the immediate
     		input			   mem_w ,		 // memory write
-            input  [5:0]       alu_op ,	 	 // instruction / opcode
+            input  [4:0]       alu_op ,	 	 // instruction / opcode
             output logic [7:0] result_o,	 // rslt
 			output logic       ov_o,
 			output logic       mem_w,
