@@ -10,44 +10,56 @@
  *  the core.								 *
  *											 *
  *********************************************/
-
-//This is the ALU module of the core, op_code_e is defined in definitions.v file
-// Includes new enum op_mnemonic to make instructions appear literally on waveform.
 import definitions::*;
 
 module alu (input  [7:0]       rs_i ,	     // operand s
             input  [7:0]       rt_i	,	     // operand t
-    		input              ov_i ,	     // shift-in
-            input  [8:0]       op_i	,	     // instruction / opcode
+    		input              ov_i ,	     // shift-in 
+    		input			   imm  ,		 // the immediate
+    		input			   mem_w ,		 // memory write
+            input  [5:0]       alu_op ,	 	 // instruction / opcode
             output logic [7:0] result_o,	 // rslt
-			output logic       ov_o);
+			output logic       ov_o,
+			output logic       mem_w,
+			output logic 	   jump);
 
-op_code    op3; 	                     // type is op_code, as defined
-assign op3 = op_code'(op_i[8:6]);      // map 3 MSBs of op_i to op3 (ALU), cast to enum
-
-always_comb								  // no registers, no clocks
+//This is what we have right now but we will definetely cut down on
+//The number of instructions for lab 4.
+always_comb								  	  // no registers, no clocks
   begin
-    result_o   = 'd0;                     // default or NOP result
-    ov_o       = 'd0;
-    case (op3)   						              // using top 3 bits as ALU instructions
-    	SLL: begin							               // logical shift left
-    	       ov_o     = rs_i[7];			      // generate shift-out bit to left
-    	       result_o = {rs_i[6:0],ov_i};	  // accept previous shift-out from right
-    	 	   end
-    	SRL: begin							  // logical right shift
-    		   ov_o     = rs_i[0];
-    		   result_o = {ov_i,rs_i[7:1]};	  // opposite of SLL
-    		 end
-      //HALT: // handled in top level / decode -- not needed in ALU
-      LSW: begin                            // store word or load word
+    result_o   = 'b0;                     	  // default or NOP result
+    ov_o       = 'b0;
+    mem_w	   = 'b0;
+    jump 	   = 'b0;
+    case (alu_op)   						  // using the 
+    	LSL: result_o = {rs_i[6:0], 1'b0};	  // pad a 0 to the empty space
+    	LSR: result_o = {1'b0, rs_i[7:1]};	  // opposite of SLL
+      	//HALT: // handled in top level / decode -- not needed in ALU
+     	STR:  begin                           // store word 
     		   result_o = rs_i;				  // pass rs_i to output	(a+0)
     		   ov_o = ov_i;
     		  end
-      CLR: result_o = 8'h00;				  // clear (output = 0)
+    	LDR:  begin
+    		   result_o = rt_i;				  // load word 
+    		   ov_o = ov_i;
+    		  end
      	EMK: result_o = 8'b01111100 & rs_i;	  // exponent mask
-      INC: {ov_o, result_o} = rs_i + 9'b1;  // out = A+1
-      ADD: {ov_o, result_o} = rs_i + rt_i + ov_i;
+      	ADD: {ov_o, result_o} = rs_i + rt_i + ov_i;
     	SUB: {ov_o, result_o} = rs_i - rt_i + !ov_i;
+        AND: result_o = rs_i & rt_i;
+        ANDI: result_o = rs_i & imm;
+        ORR: result_o = rs_i | rt_i;
+        ORRI: result_o = rs_i | imm;
+        MOV: result_o = rs_i;
+        MOVI: result_o = imm;
+        BEQ: begin
+        		assign val = rs_i - rt_i;
+        		if (val == 0) begin
+        			
+        		end
+        		jump = 'b1;
+        	 end
+
     endcase
   end
 

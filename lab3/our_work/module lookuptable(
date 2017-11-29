@@ -1,12 +1,12 @@
 //Refer to LECTURE 7
 module lut(
 	input	[8:0]	op_i, 		//The 9 bit instruction set
-	output 	logic mem_w
-				  rf_w,
-	output	logic[3:0] alu_op,	//If you wanted 32 bits, just increase this to 5 bits and imm to 32
-					   rs_addr,
-					   rt_addr,
-					   rd_addr,
+	output 	logic 	mem_w
+				  	rf_w,
+	output	logic[3:0] 	alu_op,	//If you wanted 32 bits, just increase this to 5 bits and imm to 32
+					   	rs_addr,
+					   	rt_addr,
+					   	rd_addr,
 	output 	logic[15:0] imm_pc,
 	output	logic[ 7:0]	alu_in,
 	output	logic		alu_sell
