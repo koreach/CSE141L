@@ -1,13 +1,13 @@
-	;MSW		of the first value
+	;MSW of the first value
 	mov		r0, #128
 	ldr		r0, [r0]
-	;LSW		of the first value
+	;LSW of the first value
 	mov		r0, #129
 	ldr		r1, [r0]
-	;MSW		of the second value
+	;MSW of the second value
 	mov		r0, #132
 	ldr		r2, [r0]
-	;LSW		of the second value
+	;LSW of the second value
 	add		r0, #133
 	ldr		r3, [r0]
 
@@ -20,27 +20,21 @@
 	bne 	 end
 
 	;Extract and compare exponents
-	;First	value
-	;And mask with 01111100 to extract exponent (E) value
+	;And mask with 01111100 to extract exponents
 	and		r4, r0, #0x7C
-	;Shift	right logical by two bits to get exponent portion
-	lsr		r4, r4, #2
-
-	;Second	value
-	;And		mask with 01111100 to extract exponent
 	and		r5, r2, #0x7C
-	;Shift	right logical by two bits to get exponent portion
-	lsr		r5, r5, #2
 	
 	;Compare to see which exponent value is bigger
 	cmp 	r4, r5
 
 	;If r4 > r5 then right shift second mantissa
-	bge 	greater
+	bgt 	greater
 	;If r5 > r4 then right shift first mantissa
 	blt 	less
 out	
-	add		
+	//Add the two mantinssas
+	//Check if it is overflow
+	//Rounding 
 
 label		end
 ;================================================
@@ -48,9 +42,11 @@ label		end
 ;================================================
 ;If r4 > r5 (from line 30) then move right the mantissa of r3 since its the smaller value
 greater 
+	; Currently, this is where the mantissa of r3 is stored
 	; r4 - r5 = r4
 	sub		r4, r4, r5
-	; so... r5 is free now. 
+	; Restore the hidden bit
+	orr 	r5, r5, #0x80
 	;Counter to keep track of how many times the mantissa was moved to the right
 	mov 	r5, #0
 	;Counter to see if it has gone through the loop twice
