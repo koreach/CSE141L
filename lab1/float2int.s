@@ -1,166 +1,200 @@
-	;Input
-	;R0 being the lower 8 bits
-	MOV		R0, #0x00
-	;R1 being the upper 8 bits
-	MOV		R1, #0x00
+	;R0	contains the lower 8 bits
+	;Memory location 2 contains least significant word of input
+	LDRI	R0, [#65]
+	;R1	contains the upper 8 bits
+	;Memory location 1 contains most significant word of input
+	LDRI	R1, [#64]
 	
-	;Isolate	sign bit into R2
-	AND		R2, R1, #0x80
+	;Isolate sign bit into R2
+	ANDI	R2, R1, #0x80
 	
-	;Isolate	and load the exponent into R3
-	AND		R3, R1, #0x7C
-	LSR		R3, R3, #2
+	;Isolate and load the exponent into R3
+	ANDI	R3, R1, #0x7C
+	;Shift it twice to the right to get rid of the 0's 
+	LSRI	R3, R3, #2
 	
-	;Isolate	and load mantissa into R0 and R1
-	AND 		R0, R0, #0x3
+	;Isolate lower mantissa into R4
+	ANDI 	R4, R0
+	;Isolate upper mantissa into R5
+	ANDI 	R5, R1, #0x3
 	
-	;If		(E != 0), prepend hidden bit onto mantissa
-	ADD		R4, R0, R1
-	CMP		R4, #0
-	BNE		prepend
+	;If	(E != 0), prepend hidden bit onto mantissa
+	MOVI	R6, #0
+	BNE		R3, R6, PREPEND
 	
-prepend_out
+PREPEND_OUT
 	
-	;Exponent	regimes
-	CMP		R3, #29
-	;29-31
-	BGE		overflow
-	BLT		lower
+	;EXPONENT REGIMES: This has various if statements
+	;which will output upon the value of the exponent
+	MOVI 	R6, #29
+	;If the exponent >= 29
+	BGE 	R3, R6, OVERFLOW
+
+	;If exponent < 29, move on to next case	
+	MOVI 	R6, #26
+	;If the exponent < 29 && >= 26
+	BGE		R3, R6, LEFT_SHIFT_MANTISSA
+
+	;If exponent < 26, move on to next case	
+	MOVI	R6, #25
+	;If the exponent == 25
+	BEQ		R3, R6, COPY_MANTISSA
+
+	;If exponent < 25, move on to the next case
+	MOVI	R6, #14
+	;If the exponent >= 14 && exponent < 25
+	BGT		R3, R6, RIGHT_SHIFT_MANTISSA
+
+	;If exponent < 14, force output 0000 or 8000
+	MOVI	R1, #0x80
+	;If Sign bit == 1, then output 1000. Otherwise, output 0000
+	BEQ		R2, R1, UNDERFLOW_POSITIVE
+
+	MOVI	R4, #0x00
+	MOVI 	R5, #0x00
+
+	;Force output 0000
+	STRI	R4, [#67]
+	STRI	R5, [#66]
+
+	B		LABEL
 ;====================JUMP=====================
-prepend
-	ORR		R0, R0, #0x4
-	B			prepend_out
+	;Prepend the hidden bit into the mantissa. 
+PREPEND
+	;Here you are appending a 1 at the 11th bit
+	ORRI	R5, R5, #0x4
+	B		PREPEND_OUT
 	
-	;29-31	overflow; force output 7FFF or FFFF
-overflow
-	CMP		R1, #0x80
-	BEQ		overflow_negative
-	MOV		R4, #0xFF
-	MOV 		R5, #0x7F
-	B			label
+	;29-31 overflow; force output 7FFF or FFFF
+OVERFLOW
+	MOVI	R6, #0x80
+	;If Sign bit == 1, then output FFFF. Otherwise, output 7FFF
+	BEQ		R2, R6, OVERFLOW_POSITIVE
+
+	MOVI	R4, #0xFF
+	MOVI 	R5, #0x7F
+	;Force output 7FFF
+	STRI	R4, [#67]
+	STRI	R5, [#66]
+	B		LABEL
 	
-overflow_negative
-	MOV		R4, #0xFF
-	MOV		R5, #0xFF
-	B			label
-	
-lower
-	CMP		R2, #26
-	BGE		case_1
-	BLT		lower_1
-	
-lower_1
-	CMP		R2, #25
-	BEQ		case_2
-	BLT		lower_2
-	
-lower_2
-	CMP		R2, #14
-	BGE		case_3
-	BLT		case_4
-	
+OVERFLOW_POSITIVE
+	MOVI	R4, #0xFF
+	MOVI	R5, #0xFF
+	;Force output FFFF
+	STRI	R4, [#67]
+	STRI	R5, [#66]
+	B		LABEL
+
 	;26-28	left shift mantissa, zero fill left and right as needed
-case_1
-	SUB		R3, R3, #15
-	LSL		R1, R1, R3
-	
-	LSL		R0, R0, R3
-	
-	B		label
-	
-	;25		copy mantissa, zero fill from left
-case_2
-	MOV		R4, R3
-	B		label
-	
-	;right	shift mantissa, round
-case_3
-	;R2		contains how every many times to shift to the right
-	SUB		R2, R2, #15
-	;Check if R2 is 0 or less, so don't have to move mantissa.
-	;This portion I am not too sure about... ask people when meeting for 141L
-	CMP		R2, #0
-	BLE		out
-	
-	;Extract	the first bit
-	AND		R4, R3, #0x1
-	;Shift the mantissa 1 to the right
-	LSR		R3, R3, #0x1
-	;That means R2-1 since its how many times you need to traverse
-	SUB		R2, R2, #1
-	CMP		R2, #0
-	BEQ		out2
+LEFT_SHIFT_MANTISSA
+	;The amount to shift the mantissas left by
+	SUBI	R3, R3, #15
+	;When to stop
+	MOVI 	R7, #0
+FORLOOP_1
+	;Check if the counter has reached 0
+	BEQ		R3, R7, OUT_1
+	;Shift upper 8 bit one to the left
+	LSLI	R5, R5, #1
+	;Extract the 8th bit of lower 8bits
+	ANDI	R6, R4, #0x80
+	;Shift it right 7 places so the extracted bit is in the first bit
+	LSRI	R6, R6, #7
+	;Or	it to piece it back together
+	ORR		R5, R5, R6
+	;Shift lower 8 bit one to the left. The overflow is taken care of above
+	LSLI	R4, R4, #1
+	;Decrement counter
+	SUBI	R3, R3, #1
+	;Continue	loop
+	B		FORLOOP_1
+OUT_1
+	;Return the output
+	STRI	R4, [#67]
+	STRI	R5, [#66]
+	B		LABEL
 
-	;And here, you do what I did above until R2 becomes 0 
-forloop
-	;Extract first bit into R5
-	AND		R5, R3, #0x1
-	;Shift mantissa 1 to the right
-	LSR		R3, R3, #0x1
-	;R2-1
-	SUB		R2, R2, #1
-	;Shift the extracted bit and add it into the 2nd bit
-	LSL		R5, R5, #1
-	ADD		R4, R4, R5
-	;If there is no more to shift, get out otherwise keep looping. 
-	CMP		R2, #0
-	BEQ		forloopout
-	B		forloop
-forloopout
-	;If U = 1 and R = 1 add 1 to U to round
-	AND		R5, R4, #0x1
-	AND		R6, R3, #0x1
-	CMP		R5, R6
-	BEQ		out3
+	;25	 copy mantissa, zero fill from left
+COPY_MANTISSA
+	;Just output the mantissa
+	STRI	R4, [#67]
+	STRI	R5, [#66]	
+	B		LABEL
 
-	;First check if U = 0
-	AND		R5, R3, #0x1
-	CMP		R5, #0x0
-	BEQ		out4
-	
-	B		label
-	
-	;underflow/zero,	force output 0000 or 8000
-case_4
-	CMP		R1, #0x8000
-	BEQ		overflow_negative_2
-	MOV		R4, #0x0000
-	B		label
-	
-overflow_negative_2
-	MOV		R4, #0x8000
-	B		label
-	
-copy_mantissa
-	MOV		R4, R3
-	B		label
-	
-out
-	MOV		R4, R3
-	B		label
-	
-out2
-	AND		R4, R3, #0x1
-	ADD		R5, R5, R4
-	CMP		R5, #0x2
-	BEQ		out3
-	
-out3
-	ADD		R4, R3, #1
-	B		label
+UNDERFLOW_NEGATIVE
+	MOVI	R4, #0x10
+	MOVI	R5, #0x00
 
-;If U = 0, then check if R = 1
-out4
-	AND		R5, R4, #0x1
-	CMP		R5, #1
-	BEQ		out5
-	B		label
-
-;Check if S = 1. If it does, then add 1 to U. 
-out5
-	AND		R5, R4, #0xFFFE
-	CMP		R5, #0
-	BNE		out3
-	B		label
+	;Force output 1000
+	STRI	R4, [#67]
+	STRI	R5, [#66]
+	B		LABEL
 	
-label			end
+	;14-24: right shift mantissa and round
+RIGHT_SHIFT_MANTISSA
+	;R3	contains how every many times to shift to the right
+	SUBI	R3, R3, #15
+	;R6 contains the comparison value for the BEQ
+	MOVI 	R6, #0
+	;This will contain the S value, OR of all bits right of R
+	MOVI	R9, #0
+	;This will contain the R value (immediately right of one's place)
+	MOVI 	R7, #0
+
+FORLOOP_2
+	;Check if the counter has reached 0
+	BEQ		R3, R6, OUT_2
+	;Before extracting the lower first bit into R7
+	;Orr the existing R7 value into R9 (which is S)
+	ORR 	R9, R9, R7
+	;Extract lower first bit into R7
+	ANDI	R7, R4, #0x1
+	;Extract upper first bit into R8
+	ANDI 	R8, R5, #0x1
+	;Shift extracted upper bit left 7 time to ORR it back together
+	LSLI 	R8, R8, #7
+	;Shift lower mantissa 1 to the right
+	LSRI	R4, R4, #0x1
+	;Shift upper mantissa 1 to the right
+	LSRI	R5, R5, #0x1
+	;ORR the extracted bit into the shifted mantissa
+	ORR    	R4, R4, R8
+	;Decrement counter
+	SUBI	R3, R3, #1
+	B		FORLOOP_2
+OUT_2
+
+	;Get the U value. 1 if odd, 0 if even
+	ANDI	R6, R4, 0x1
+	;R8 contains the comparison value for the BEQ
+	MOVI	R8, #1;
+	;Check if U == 1
+	BEQ		R6, R8, CHECK_R 
+	;If U == 0, check R also.
+	
+	MOVI	R8, #0;
+	;If R == 0, then dont round
+	BEQ		R7, R8, OUTPUT
+	;Else add check to see if S == 1
+	MOVI	R8, #0;
+	;If S == 0, then dont round
+	BEQ		R9, R8, OUTPUT
+	;Else add 1 to round and output
+	ADDI 	R4, R4, #1
+	B 		OUTPUT
+
+CHECK_R 
+	MOVI	R8, #0;
+	;If R==0, then dont round
+	BEQ		R7, R8, OUTPUT
+	;Else add 1 to round and output
+	ADDI 	R4, R4, #1
+	B 		OUTPUT
+
+OUTPUT
+	STRI	R4, [#67]
+	STRI	R5, [#66]
+	B		LABEL
+	
+LABEL
