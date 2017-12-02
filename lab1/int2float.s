@@ -1,146 +1,152 @@
-	;Load	the input into r0
-	;r0		contains the lower 8 bits
-	mov		r0, #0x06
-	;r1		contains the upper 8 bits
-	mov		r1, #0x80
+	;R0	contains the lower 8 bits
+	;Memory location 2 contains least significant word of input
+	LDRI	R0, [#2]
+	;R1	contains the upper 8 bits
+	;Memory location 1 contains most significant word if input
+	LDRI	R1, [#1]
 	
-	;Isolate	sign bit into r2
-	and		r2, r1, #0x80
-	;Set		(biased) E = 29 into R2. 29-15	= 14 bits. 15th bit already defined in sigbit.16th bit is + or -
-	mov		r3, #29
+	;Isolate sign bit into R2
+	ANDI	R2, R1, #0x80
+	;Set (biased) E = 29 into R3
+	MOVI	R3, #29
 	
-	;Copy	R4[7:0]=I[7:0] and R5[14:7]=I[14:7]
-	;r4		contains lower 8 bits
-	mov		r4, r0
-	;r5		contains upper 8 bits
-	and		r5, r1, #0xFF
+	;So R4 has the lower 8 bits
+	;Copy R4[7:0]=I[7:0]
+	MOV		R4, R0;
+	;So R5 has the upper 7 bits (which excludes the sign bit)
+	;Copy R5[14:8]=I[14:8]
+	ANDI	R5, R1, #0x7F
 	
-	;FOR		LOOP
-forloop
-	;Isolate	the R3[14] bit
-	and		r6, r5, #0x40
-	;Compare	and see if 15th bit is 1
-	cmp		r6, #0x40
-	;If		(r4[14] == 1) break out of loop
-	beq		out
-	;Otherwise,	left shift R4/R5 and decrement R3
+	;FOR LOOP
+FORLOOP
+	;Isolate R4[14] (which is the 15th bit)
+	ANDI	R6, R5, #0x40
+	;Move #0x40 into R7 for BEQ comparison
+	MOVI 	R7, #0x40
+	;Compare and see if 15th bit is 1
+	;If (R6 == #0x40), then break out of the loop. Branch to out
+	BEQ		R6, R7, OUT
+
+	;This is the other case, where R6 == 0
+	;Then left shift R4/R5 and decrement R3
+	;Shift upper 8 bit one to the left
+	LSLI	R5, R5, #1
+	;Extract the 8th bit of lower 8bits
+	ANDI	R6, R4, #0x80
+	;Shift it right 7 places so the extracted bit is in the first bit
+	LSRI	R6, R6, #7
+	;Or	it to piece it back together
+	ORR		R5, R5, R6
+	;Shift lower 8 bit one to the left. The overflow is taken care of above
+	LSLI	R4, R4, #1
 	
-	;Shift	upper 8 bit one to the left
-	lsl		r5, r5, #1
-	;Extract	the 8th bit of lower 8bits
-	and		r6, r4, #0x80
-	;Shift	it right 7 places so its in the 1st bit place
-	lsr		r6, r6, #7
-	;Or		it to piece it back together
-	orr		r5, r5, r6
-	;Shift	lower 8 bit one to the left
-	lsl		r4, r4, #1
-	and		r4, r4, #0xFF
-	
-	;Decrement	exponent value
-	sub		r3, r3, #1
+	;Decrement exponent value by 1
+	SUB		R3, R3, #1
 	
 	;Continue	loop
-	b		forloop
-	
-out
+	B		FORLOOP
+OUT
+
 	;ROUNDING
-	;PART	1: If(R3[4]==1 && R3[3]==1) add R3+8
-	and		r6, r4, #0x10
-	;Compare	and see if 5th bit is 1
-	cmp		r6, #0x10
-	;If		(R3[4] == 1)
-	beq		rounding_1
-	;Coming	out of PART 1 if statement
-rounding_exit1
+	;Case A: If(R4[4]==1 && R4[3]==1) add R4+8
+	;Extract R4[4]
+	ANDI	R6, R4, #0x10
+	;Move 1 into R7 for BEQ comparison
+	MOVI 	R7, #1
+	;Compare and see if R4[4] == 1
+	BEQ		R6, R7, ROUDING_CASE_A
+	;Coming	out of Case A if statement
+ROUNDING_CASE_A_EXIT
 	
-	;PART	2: If(R3[4]==0 && R3[3]==1&&R3[2:0]!=0) add R3+8
-	and		r6, r4, #0x10
-	;Compare	to see if 5th bit is 0
-	cmp		r4, #0
-	;If		(R3[4] == 0)
-	beq		rounding_2
+	;Case B: If(R4[4]==0 && R4[3]==1 && R4[2:0]!=0) add R4+8
+	;Extract R4[4]	
+	ANDI	R6, R4, #0x10
+	;Move 0 into R7 for BEQ comparison
+	MOVI 	R7, #0
+	;Compare to see if R[4] == 0
+	BEQ		R6, R7, ROUDING_CASE_B
 	;Coming	out of PART 2 if statement
-rounding_exit2
+ROUNDING_CASE_B_EXIT
 	
 	;OVERFLOW	CHECK
-	and		r6, r5, #0x80
-	;Compare	to see if 16th bit is negative
-	cmp		r6, #0x80
-	;If		(R3[15]==1)
-	beq		overflow
+	;Move 1 into R6 for BEQ comparioson
+	MOVI	R6, #0x80
+	;Compare to see if 16th bit is negative. If so, go to OVERFLOW
+	;R2 has the 16th bit already so use that for comparison
+	BEQ 	R2, R6, OVERFLOW
 	;Coming	out of overflow if statement
-overflow_end
+OVERFLOW_END
 	
-	;===========Putting	values together===================
-	;Exponent	value - 15 in order to figure out how many places to shift r0 for mantissa
-	b		label
+	;Putting the value together
+	;Bring the sign bit into R5
+	ORR		R5, R5, R2
+	;Then output the result into respective memory locations
+	;LSW of result into 6
+	STRI	R4, [#6]
+	;MSW of result into 5
+	STRI	R5, [#5]
+
+	;The end of the program, goes to the end. 
+	B		END
 	
-	;==============================================
-	;ALL		THE ADDRESSES TO JUMP TO
-	;If		(R3[3] == 1)
-rounding_1
-	and		r6, r4, #0x8
-	cmp		r6, #0x8
-	beq		rounding_1_1
-	b		rounding_exit1
+	;All branches
+	;=====================================================
+
+	;Compare and see if R4[3] == 1
+ROUDING_CASE_A
+	;Extract R4[3]
+	ANDI	R6, R4, #0x8
+	; Move 1 into R7 for BEQ comparison
+	MOVI 	R7, #0x8
+	;Compare and see if R4[3] == 1. If so, then go to next branch
+	BEQ		R6, R7, ROUDING_CASE_A_1
+	B		ROUDING_CASE_A_EXIT
+
+	;Add R4+8
+ROUNDING_CASE_A_1 
+	ADDI 	R4, R4, #8
+	B 		ROUNDING_CASE_A_EXIT
 	
-	;add		R3 + 8
-rounding_1_1
-	;Check	to see if value will overflow into r5
-	cmp		r4, #0xF8
-	bgt		local_overflow
-local_overflow_exit
-	add		r4, r4, #0x8
-	and		r4, r4, #0xFF
-	b		rounding_exit1
+
+	;Compare and see if R4[3] == 1
+ROUDING_CASE_B
+	;Extract R4[3]
+	ANDI	R6, R4, #0x8
+	;Move 1 into R7 for BEQ comparison
+	MOVI 	R7, #0x8
+	;Compare and see if R4[3] == 1. If so, then go to next branch
+	BEQ		R6, R7, ROUDING_CASE_B_1
+	B		ROUDING_CASE_B_EXIT
 	
-	;If		(R3[3] == 1)
-rounding_2
-	and		r6, r4, #0x8
-	cmp		r6, #0x8
-	beq		rounding_2_1
-	b		rounding_exit2
+	;Compare and see if R3[2:0] != 0
+ROUDING_CASE_B_1
+	;Extract R3[2:0]
+	ANDI	R6, R4, #0x7
+	;Move 0 into R7 for BNE comparison
+	MOVI	R7, #0
+	;Compare and see if R3[2:0] != 0, if so, then go to next branch
+	BNE		R6, R7, ROUNDING_CASE_B_2
+	B		ROUDING_CASE_B_EXIT
 	
-	;If		(R3[2:0]!=0)
-rounding_2_1
-	and		r6, r4, #0x7
-	cmp		r6, #0
-	bne		rounding_2_2
-	b		rounding_exit2
+	;Add R4+8
+ROUNDING_CASE_B_2
+	ADDI 	R4, R4, #8
+	B 		ROUNDING_CASE_B_EXIT
 	
-	;add		R3 + 8
-rounding_2_2
-	cmp		r4, #0xF8
-	bgt		local_overflow2
-local_overflow_exit2
-	add		r4, r4, #0x8
-	and		r4, r4, #0xFF
-	b		rounding_exit2
-	
-	;If		(R3[15]==1)
-overflow
-	;Shift	lower 8 bit one to the right
-	lsr		r4, r4, #1
-	;Extract	the 1st bit of upper 8bits
-	and		r6, r5, #0x1
-	;Shift	it left 7 places so its in the 8th bit place
-	lsl		r6, r6, #7
-	;Or		it to piece it back together
-	orr		r4, r4, r6
-	;Shift	upper 8 bit one to the right
-	lsr		r5, r5, #1
-	
-	;Increment	exponent value
-	add		r3, r3, #1
-	b		overflow_end
-	
-local_overflow
-	add		r5, r5, #1
-	b		local_overflow_exit
-	
-local_overflow2
-	add		r5, r5, #1
-	b		local_overflow_exit2
-	
-label				end
+	;Overflow check
+OVERFLOW
+	;Right shift R4/R5 and increment R3
+	;Shift lower 8 bit one to the right
+	LSRI	R4, R4, #1
+	;Extract the 1st bit of upper 8bits
+	ANDI	R6, R5, #0x1
+	;Shift it left 7 places so the extracted bit is in the eight bit
+	LSLI	R6, R6, #7
+	;Or	it to piece it back together
+	ORR		R4, R4, R6
+	;Shift upper 8 bit one to the right. The overflow is taken care of above
+	LSRI	R5, R5, #1
+	;Increment exponent value by 1
+	ADDI	R3, R3, #1
+	B		OVERFLOW_END
+END
