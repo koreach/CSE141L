@@ -1,124 +1,167 @@
 	;MSW of the first value
-	mov		r0, #128
-	ldr		r0, [r0]
+	LDRI	R0, [#128]
 	;LSW of the first value
-	mov		r0, #129
-	ldr		r1, [r0]
+	LDRI	R1, [#129]
 	;MSW of the second value
-	mov		r0, #132
-	ldr		r2, [r0]
+	LDRI	R2, [#130]
 	;LSW of the second value
-	add		r0, #133
-	ldr		r3, [r0]
+	LDRI	R3, [#131]
 
 	;Extract and compare sign bits
-	and 	r4, r0, #0x80
-	and 	r5, r2, #0x80
-	;Compare the sign bits
-	cmp 	r4, r5
+	ANDI 	R6, R0, #0x80
+	ANDI	R7, R2, #0x80
 	;We are only doing something if the sign bits are the same
-	bne 	 end
+	;So if not the same, then jsut get out
+	BNE 	R4, R5, LABEL
 
 	;Extract and compare exponents
 	;And mask with 01111100 to extract exponents
-	and		r4, r0, #0x7C
-	and		r5, r2, #0x7C
+	;First exponent
+	ANDI	R4, R0, #0x7C
+	;Second exponent
+	ANDI	R5, R2, #0x7C
+
+	;Extract the mantissas also
+	;First mantissa
+	ANDI	R0, R0, #0x3
+	;Second Mantissa
+	ANDI	R2, R2, #0x3
 	
 	;Compare to see which exponent value is bigger
-	cmp 	r4, r5
+	;If R4 > R5 then right shift second mantissa 
+	BGT 	R4, R5, GREATER
+	;If R5 > R4 then right shift first mantissa
+	BLT 	R4, R5, LESS
+OUT	
+	;Adding the upper mantissa
+	ADD 	R0, R0, R2
+	;Adding the lower mantissa
+	ADD 	R3, R3, R1
+	;Apply Rounding
 
-	;If r4 > r5 then right shift second mantissa
-	bgt 	greater
-	;If r5 > r4 then right shift first mantissa
-	blt 	less
-out	
-	//Add the two mantinssas
-	//Check if it is overflow
-	//Rounding 
+	ANDI 	R10, R3, #1
+	;R8 has S, R9 has R, R10 will have LSB
 
-label		end
+	;If R == 1, then output 
+	MOVI 	R11, #0
+	BEQ		R11, R9, OUTPUT
+	;If LSB == 1, SUM + 1
+	MOVI 	R11, #1
+	BEQ		R11, R10, OUTPUT_ADD 
+
+	;If S == 1, SUM + 1
+	BEQ		R11, R8, OUTPUT_ADD 
+
+	B 		OUTPUT
+
 ;================================================
 ;		All the branches that happen 
 ;================================================
-;If r4 > r5 (from line 30) then move right the mantissa of r3 since its the smaller value
-greater 
-	; Currently, this is where the mantissa of r3 is stored
-	; r4 - r5 = r4
-	sub		r4, r4, r5
-	; Restore the hidden bit
-	orr 	r5, r5, #0x80
-	;Counter to keep track of how many times the mantissa was moved to the right
-	mov 	r5, #0
-	;Counter to see if it has gone through the loop twice
-	mov 	r6, #0
-	;Need to do rounding
-forloop
-	;If r4 == r5, jump out 
-	cmp 	r6, r5
-	beq 	outOfForLoop
-	;Includes the bits that were shifted out from the mantissa
-	orr 	r8, r3, #1
-	lsl		r8, r8, #1
-	;Shift one bit to the right of LSW
-	lsr 	r3, r3, #1
-	
-	;If it has gone through the loop twice, then the last two bits in MSW does not matter
-	cmp 	r5, #2
-	bgt 	continue
-	;Bitmask out last bit of r2
-	and 	r7, r2, #1
-	;Shift it to the 8th bit 
-	lsl		r7, r7, #7
-	;Orr the r3 with r7 to account for the bit shift
-	orr		r3, r7, r3
-	;Shift the bit right to one
-	lsr		r2, r2, #1
-	;Counter++
-	add		r6, r6, #1
-continue
-	;Counter++
-	add		r6, r6, #1
-	b 		forloop
-outOfForLoop
-	lsr		r2, r2, r6
-	b  		out
+;If r4 > r5 (from line 30) then move right mantissa of second value
+GREATER 
+	;R5 = R4 - R5. The amount we need to shift to the right by
+	SUB		R5, R4, R5
+	;Shift the value two to the right to get rid of the 0's
+	LSRI	R5, R5, #2
+	;Restore the hidden bit into the mantissa
+	ORRI	R2, R2, #0x80
+
+	;This will contain the S value, OR of all bits right of R
+	MOVI	R8, #0
+	;This will contain the R value (immediately right of one's place)
+	MOVI 	R9, #0
+	;This will contain the comparison value for BEQ
+	MOVI	R10, #0
+
+FORLOOP_1
+	;Check if the counter has reached 0
+	BEQ		R10, R5, OUT_1
+	;Before extracting the lower first bit into R9 (R)
+	;Orr the existing R9 (R) value into R8 (S)
+	ORR 	R8, R8, R9
+	;Extract lower first bit into R9
+	ANDI	R9, R3, #0x1
+	;Extract upper first bit into R11
+	ANDI 	R11, R2, #0x1
+	;Shift extracted upper bit left 7 time to ORR it back together
+	LSLI 	R11, R11, #7
+	;Shift lower mantissa 1 to the right
+	LSRI	R3, R3, #0x1
+	;Shift upper mantissa 1 to the right
+	LSRI	R2, R2, #0x1
+	;ORR the extracted bit into the shifted mantissa
+	ORR    	R2 R2, R11
+	;Decrement counter
+	SUBI	R5, R5, #1
+	B		FORLOOP_1
+OUT_1
+	;Set R5 = R4 to restore the exponent value
+	MOV 	R5, R4
+	B 		OUT
+
+
 ;==================================================
 ;If  r5 > r4 (from line 33) then move right the mantissa of r1 since its the smaller value
-less 	
-	; r5 - r4 = r4
-	sub 	r4, r5, r4
-	;Counter to keep track of how many times the mantissa was moved to the right
-	mov 	r5, #0
-	;Counter to see if it has gone through the loop twice
-	mov 	r6, #0
-	;Need to do rounding
-forloop
-	;If r4 == r5, jump out 
-	cmp 	r6, r5
-	beq 	outOfForLoop
-	;Includes the bits that were shifted out from the mantissa
-	orr 	r8, r1, #1
-	lsl		r8, r8, #1
+LESS 
+	;R4 = R5 - R4. The amount we need to shift to the right by
+	SUB		R4, R5, R4
+	;Shift the value two to the right to get rid of the 0's
+	LSRI	R4, R4, #2
+	;Restore the hidden bit into the mantissa
+	ORRI	R0, R0, #0x80
 
-	;Shift one bit to the right of LSW
-	lsr 	r1, r1, #1
-	;If it has gone through the loop twice, then the last two bits in MSW does not matter
-	cmp 	r5, #2
-	bgt 	continue
-	;Bitmask out last bit of r0
-	and 	r7, r0, #1
-	;Shift it to the 8th bit 
-	lsl		r7, r7, #7
-	;Orr the last bit of r1 into r7
-	orr		r1, r7, r1
-	;Shift the bit right to one
-	lsr		r0, r0, #1
-	;Counter++
-	add		r6, r6, #1
-continue
-	;Counter++
-	add		r6, r6, #1
-	b 			forloop
-outOfForLoop
-	lsr			r0, r0, r6
-	b			out
+	;This will contain the S value, OR of all bits right of R
+	MOVI	R8, #0
+	;This will contain the R value (immediately right of one's place)
+	MOVI 	R9, #0
+	;This will contain the comparison value for BEQ
+	MOVI	R10, #0
+
+FORLOOP_2
+	;Check if the counter has reached 0
+	BEQ		R10, R5, OUT_2
+	;Before extracting the lower first bit into R9 (R)
+	;Orr the existing R9 (R) value into R8 (S)
+	ORR 	R8, R8, R9
+	;Extract lower first bit into R9
+	ANDI	R9, R1, #0x1
+	;Extract upper first bit into R11
+	ANDI 	R11, R0, #0x1
+	;Shift extracted upper bit left 7 time to ORR it back together
+	LSLI 	R11, R11, #7
+	;Shift lower mantissa 1 to the right
+	LSRI	R1, R1, #0x1
+	;Shift upper mantissa 1 to the right
+	LSRI	R0, R0, #0x1
+	;ORR the extracted bit into the shifted mantissa
+	ORR    	R0 R0, R11
+	;Decrement counter
+	SUBI	R4, R4, #1
+	B		FORLOOP_2
+OUT_2
+	;Set R5 = R4 to restore the exponent value
+	MOV 	R4, R5
+	B 		OUT
+
+OUTPUT
+	;Put in the LSW first 
+	STRI	R3, [#133]
+
+	;ORR the signbit, exponent, and the remainder mantissa
+	ORR 	R0, R0, R5
+	ORR 	R0, R0, R6
+	STRI	R0, [#132]
+	B 		OUT
+
+OUTPUT_ADD
+	ADDI 	R3, R3, #1
+	;Put in the LSW first 
+	STRI	R3, [#133]
+
+	;ORR the signbit, exponent, and the remainder mantissa
+	ORR 	R0, R0, R5
+	ORR 	R0, R0, R6
+	STRI	R0, [#132]
+	B 		OUT
+
+LABEL
