@@ -1,76 +1,98 @@
-mov r0, #0x06
-mov r1, #0x80
-and r2, r1, #0x80
-mov r3, #29
-mov r4, r0
-and r5, r1, #0xFF
-forloop
-and r6, r5, #0x40
-cmp r6, #0x40
-beq out
-lsl r5, r5, #1
-and r6, r4, #0x80
-lsr r6, r6, #7
-orr r5, r5, r6
-lsl r4, r4, #1
-and r4, r4, #0xFF
-sub r3, r3, #1
-b forloop
-out
-and r6, r4, #0x10
-cmp r6, #0x10
-beq rounding_1
-rounding_exit1
-and r6, r4, #0x10
-cmp r4, #0
-beq rounding_2
-rounding_exit2
-and r6, r5, #0x80
-cmp r6, #0x80
-beq overflow
-overflow_end
-b label
-rounding_1
-and r6, r4, #0x8
-cmp r6, #0x8
-beq rounding_1_1
-b rounding_exit1
-rounding_1_1
-cmp r4, #0xF8
-bgt local_overflow
-local_overflow_exit
-add r4, r4, #0x8
-and r4, r4, #0xFF
-b rounding_exit1
-rounding_2
-and r6, r4, #0x8
-cmp r6, #0x8
-beq rounding_2_1
-b rounding_exit2
-rounding_2_1
-and r6, r4, #0x7
-cmp r6, #0
-bne rounding_2_2
-b rounding_exit2
-rounding_2_2
-cmp r4, #0xF8
-bgt local_overflow2
-local_overflow_exit2
-add r4, r4, #0x8
-and r4, r4, #0xFF
-b rounding_exit2
-overflow
-lsr r4, r4, #1
-and r6, r5, #0x1
-lsl r6, r6, #7
-orr r4, r4, r6
-lsr r5, r5, #1
-add r3, r3, #1
-b overflow_end
-local_overflow
-add r5, r5, #1
-b local_overflow_exit
-local_overflow2
-add r5, r5, #1
-b local_overflow_exit2
-label end
+LDRI	R0, [#2]
+LDRI	R1, [#1]
+ANDI	R2, R1, #0x80
+MOV 	R3, #0
+BEQ 	R0, R3, CHECK_IF_ZERO
+BACK
+MOVI	R3, #29
+MOV		R4, R0
+ANDI	R5, R1, #0x7F
+FORLOOP
+ANDI	R6, R5, #0x40
+MOVI 	R7, #0x40
+BEQ		R6, R7, OUT
+LSLI	R5, R5, #1
+ANDI	R6, R4, #0x80
+LSRI	R6, R6, #7
+ORR		R5, R5, R6
+LSLI	R4, R4, #1
+SUB		R3, R3, #1
+B		FORLOOP
+OUT
+ANDI	R6, R4, #0x10
+MOVI 	R7, #1
+BEQ		R6, R7, ROUDING_CASE_A
+ROUNDING_CASE_A_EXIT
+ANDI	R6, R4, #0x10
+MOVI 	R7, #0
+BEQ		R6, R7, ROUDING_CASE_B
+ROUNDING_CASE_B_EXIT
+MOVI	R6, #0x80
+BEQ 	R2, R6, OVERFLOW
+OVERFLOW_END
+LSLI 	R3, R3, #2
+ORR 	R2, R2, R3
+MOVI  	R7, #15
+MOVI 	R8, #11
+FORLOOP_MANTISSA
+LSRI	R4, R4, #1
+ANDI	R6, R5, #1
+LSLI	R6, R6, #7
+ORR		R4, R4, R6
+LSRI	R5, R5, #1
+SUB		R7, R7, #1
+BEQ 	R8, R7, MANTISSA_OUT
+B		FORLOOP_MANTISSA
+MANTISSA_OUT
+ANDI	R4, R4, #0xFF
+ANDI	R5, R5, #3
+ORR		R9, R5, R9
+STRI	R4, [#6]
+STRI	R9, [#5]
+B		END
+ROUDING_CASE_A
+ANDI	R6, R4, #8
+MOVI 	R7, #0x8
+BEQ		R6, R7, ROUDING_CASE_A_1
+B		ROUDING_CASE_A_EXIT
+ROUNDING_CASE_A_1 
+MOVI	R8, #0xF8
+BGE  	R4, R8, ADD_UPPER_BIT_1
+ROUNDING_1
+ADDI 	R4, R4, #8
+B 		ROUNDING_CASE_A_EXIT
+ROUDING_CASE_B
+ANDI	R6, R4, #8
+MOVI 	R7, #0x8
+BEQ		R6, R7, ROUDING_CASE_B_1
+B		ROUDING_CASE_B_EXIT
+ROUDING_CASE_B_1
+ANDI	R6, R4, #7
+MOVI	R7, #0
+BNE		R6, R7, ROUNDING_CASE_B_2
+B		ROUDING_CASE_B_EXIT
+ROUNDING_CASE_B_2
+MOVI	R8, #0xF8
+BGE  	R4, R8, ADD_UPPER_BIT_2
+ROUNDING_2
+ADDI 	R4, R4, #8
+B 		ROUNDING_CASE_B_EXIT
+ADD_UPPER_BIT_1
+ADDI 	R5, R5, #1
+B 	ROUNDING_1
+ADD_UPPER_BIT_2
+ADDI 	R5, R5, #1
+B 	ROUNDING_2
+OVERFLOW
+LSRI	R4, R4, #1
+ANDI	R6, R5, #1
+LSLI	R6, R6, #7
+ORR		R4, R4, R6
+LSRI	R5, R5, #1
+ADDI	R3, R3, #1
+B		OVERFLOW_END
+CHECK_IF_ZERO
+ANDI 	R4, R4, 0x7F
+BEQ 	R4, R3, END
+B 		BACK	
+END
